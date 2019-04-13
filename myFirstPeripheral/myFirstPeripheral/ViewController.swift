@@ -11,6 +11,8 @@ import CoreBluetooth
 
 class ViewController: UIViewController {
 
+    @IBOutlet weak var logView: UITextView!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -28,7 +30,7 @@ class ViewController: UIViewController {
         
         let manager = CBPeripheralManager()
         
-        log("CB manager state: \(manager.state)")
+        log("CB manager state: \(manager.state.rawValue)")
         if (manager.state == CBManagerState.poweredOn) {
             log("adding service")
             manager.add(service)
@@ -43,5 +45,8 @@ class ViewController: UIViewController {
     
     func log(_ msg: String) {
         print(msg)
+        
+        logView.text.append(msg)
+        logView.text.append("\n")
     }
 }
