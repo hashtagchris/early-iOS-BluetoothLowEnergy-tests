@@ -12,6 +12,7 @@
 		6D7AD25C2262936E001209AC /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6D7AD25A2262936E001209AC /* Main.storyboard */; };
 		6D7AD25E2262936F001209AC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6D7AD25D2262936F001209AC /* Assets.xcassets */; };
 		6D7AD2612262936F001209AC /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6D7AD25F2262936F001209AC /* LaunchScreen.storyboard */; };
+		6D7AD26A226293C5001209AC /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6D7AD269226293C5001209AC /* CoreBluetooth.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +23,7 @@
 		6D7AD25D2262936F001209AC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6D7AD2602262936F001209AC /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		6D7AD2622262936F001209AC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		6D7AD269226293C5001209AC /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -29,6 +31,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6D7AD26A226293C5001209AC /* CoreBluetooth.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -40,6 +43,7 @@
 			children = (
 				6D7AD2552262936E001209AC /* myFirstPeripheral */,
 				6D7AD2542262936E001209AC /* Products */,
+				6D7AD268226293C4001209AC /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -62,6 +66,14 @@
 				6D7AD2622262936F001209AC /* Info.plist */,
 			);
 			path = myFirstPeripheral;
+			sourceTree = "<group>";
+		};
+		6D7AD268226293C4001209AC /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				6D7AD269226293C5001209AC /* CoreBluetooth.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
