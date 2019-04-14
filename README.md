@@ -7,9 +7,9 @@ iOS + Bluetooth Low Energy Tests, 2019
 
 myFirstPeripheral advertises one custom GATT service with two characteristics. One readable characteristic returns the utf8 bytes for "*** Hello, would you like some coffee?" for every read.
 
-* GATT service UUID: `0000cafe-0000-1000-8000-00805f9b34fb` (16bit version: `0xcafe`).
-  * Readable characteristic. UUID: `0000c0fe-0000-1000-8000-00805f9b34fb` (16bit version: `0xc0fe`).
-  * Readable characteristic. UUID: `0000c0ff-0000-1000-8000-00805f9b34fb` (16bit version: `0xc0ff`).
+* GATT service UUID: `0000cafe-0000-1000-8000-00805f9b34fb` (16bit version*: `0xcafe`).
+  * Readable characteristic. UUID: `0000c0fe-0000-1000-8000-00805f9b34fb` (16bit version*: `0xc0fe`).
+  * Readable characteristic. UUID: `0000c0ff-0000-1000-8000-00805f9b34fb` (16bit version*: `0xc0ff`).
 
 ### Linux machine as BLE Central
 
@@ -72,4 +72,4 @@ Attempting to read /org/bluez/hci0/dev_43_06_32_87_63_44/service003e/char0041
   52 65 61 64 20 72 65 71 75 65 73 74 20 23 33     Read request #3
 ```
 
-Note: To make my test code a little simpler and easier to follow, I cheated and used 16bit UUIDs without registering them with the Bluetooth SIG. See https://stackoverflow.com/questions/10243769/what-range-of-bluetooth-uuids-can-be-used-for-vendor-defined-profiles.
+*Note: To make my code a little simpler and easier to follow, I cheated and used 16bit UUIDs without registering them with the Bluetooth SIG. See https://stackoverflow.com/questions/10243769/what-range-of-bluetooth-uuids-can-be-used-for-vendor-defined-profiles. For a real app I would use a UUID generator and 128bit UUID strings in my code.
