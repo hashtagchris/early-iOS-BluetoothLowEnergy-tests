@@ -15,6 +15,8 @@ class ViewController: UIViewController, CBCentralManagerDelegate {
     @IBOutlet weak var c0feButton: UIButton!
     @IBOutlet weak var c0ffButton: UIButton!
     var central: CBCentralManager!
+    var targetPeripheral: CBPeripheral? = nil
+    var connected = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -45,9 +47,16 @@ class ViewController: UIViewController, CBCentralManagerDelegate {
             log("  [No services advertised?]")
         }
         log("")
-        
-        //log("Connecting...")
-        //central.connect(peripheral, options: nil)
+
+        if (targetPeripheral == nil) {
+            // Keep a reference to the peripheral we're connecting to.
+            // Otherwise we get API misuse warnings and the connection gets canceled.
+            targetPeripheral = peripheral
+
+            log("Connecting to \(peripheral.identifier) (\(peripheral.name ?? "[no name]")))")
+            central.connect(peripheral, options: nil)
+            log("")
+        }
     }
     
     func centralManager(_ central: CBCentralManager,
@@ -59,15 +68,38 @@ class ViewController: UIViewController, CBCentralManagerDelegate {
         else {
             log("Failed to connect to \(peripheral.identifier) (\(peripheral.name ?? "[no name]")). Error unknown.")
         }
+
+        if (peripheral == targetPeripheral) {
+            targetPeripheral = nil
+        }
+        else {
+            log("Error connecting to a different peripheral!")
+        }
     }
     
     func centralManager(_ central: CBCentralManager,
                         didConnect peripheral: CBPeripheral) {
         log("Connected to \(peripheral.identifier) (\(peripheral.name ?? "[no name]"))")
         
+        if (peripheral != targetPeripheral) {
+            log("Connected to a different peripheral!")
+            return
+        }
+        
+        if let services = peripheral.services {
+            for service in services {
+                log("  * Service: \(service.uuid)")
+            }
+        }
+        else {
+            log("  [Peripheral has no services?]")
+        }
+        
+        connected = true
+        
         c0feButton.isEnabled = true
         c0ffButton.isEnabled = true
-        
+
         reevaluateScanning(central)
     }
     
@@ -81,35 +113,48 @@ class ViewController: UIViewController, CBCentralManagerDelegate {
             log("Disconnected from \(peripheral.identifier) (\(peripheral.name ?? "[no name]")).")
         }
         
-        reevaluateScanning(central)
+        if (peripheral == targetPeripheral) {
+            targetPeripheral = nil
+            connected = false
+            
+            c0feButton.isEnabled = false
+            c0ffButton.isEnabled = false
+
+            reevaluateScanning(central)
+        }
+        else {
+            log("Disconnected from a different peripheral!")
+        }
     }
     
     func reevaluateScanning(_ central: CBCentralManager) {
-        let services = [CBUUID(string: "CAFE")]
-        
-        // let scanServices:[CBUUID]? = services
+        // let scanServices = [CBUUID(string: "CAFE")]
         let scanServices:[CBUUID]? = nil
         
         if (central.state == CBManagerState.poweredOn) {
-            let count = central.retrieveConnectedPeripherals(withServices: services).count
-            if (count == 0) {
+            if (targetPeripheral == nil || !connected) {
                 if (!central.isScanning) {
-                    log("connected to zero devices. starting scan.")
+                    if (scanServices != nil) {
+                        log("Not connected yet. Starting scan for peripherals with CAFE service.");
+                    }
+                    else {
+                        log("Not connected yet. Starting scan for any peripherals.")
+                    }
                     central.scanForPeripherals(withServices: scanServices, options: nil)
                 }
             }
             else {
                 if (central.isScanning) {
-                    log("connected to \(count) device(s). stopping scan.")
+                    log("Connected to a peripheral. Stopping scan.")
                     central.stopScan()
                 }
                 else {
-                    log("connected to \(count) device(s). scanning already stopped.")
+                    log("Connected to a peripheral. scanning already stopped.")
                 }
             }
         }
         else {
-            log("skipping scanning state check - not powered on")
+            log("Skipping scanning state check - not powered on.")
         }
     }
     
