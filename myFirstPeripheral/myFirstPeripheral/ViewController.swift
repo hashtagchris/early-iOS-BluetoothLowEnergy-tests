@@ -11,14 +11,14 @@ import CoreBluetooth
 
 class ViewController: UIViewController, CBPeripheralManagerDelegate {
     @IBOutlet weak var logView: UITextView!
-    var peripheral: CBPeripheralManager? = nil
+    var peripheral: CBPeripheralManager!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         log("initializing...")
         peripheral = CBPeripheralManager(delegate: self, queue: nil)
-        log("peripheral state: \(stateToString(peripheral!.state))")
+        log("peripheral state: \(stateToString(peripheral.state))")
     }
     
     func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
