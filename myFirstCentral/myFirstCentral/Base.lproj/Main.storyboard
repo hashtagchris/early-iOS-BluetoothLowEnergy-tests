@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13122.16" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+    <device id="retina6_1" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13104.12"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14490.49"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -9,16 +13,52 @@
         <!--View Controller-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="ViewController" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="myFirstCentral" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="OH7-OD-GCq">
+                                <rect key="frame" x="20" y="44" width="374" height="742"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ZMx-Gd-Iz8">
+                                <rect key="frame" x="20" y="832" width="374" height="30"/>
+                                <color key="backgroundColor" red="0.37385094963901844" green="0.66666668653488159" blue="0.45990262319125036" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <state key="normal" title="Read C0FF value"/>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="5MX-xa-HW1">
+                                <rect key="frame" x="20" y="794" width="374" height="30"/>
+                                <color key="backgroundColor" red="0.37385094959999998" green="0.66666668650000005" blue="0.45990262320000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <state key="normal" title="Read C0FE value"/>
+                            </button>
+                        </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="5MX-xa-HW1" firstAttribute="trailing" secondItem="ZMx-Gd-Iz8" secondAttribute="trailing" id="GJl-Er-01Y"/>
+                            <constraint firstItem="OH7-OD-GCq" firstAttribute="trailing" secondItem="8bC-Xf-vdC" secondAttribute="trailingMargin" id="HKF-jH-PeH"/>
+                            <constraint firstItem="ZMx-Gd-Iz8" firstAttribute="bottom" secondItem="6Tk-OE-BBY" secondAttribute="bottom" id="ZiB-eO-KHD"/>
+                            <constraint firstItem="5MX-xa-HW1" firstAttribute="top" secondItem="OH7-OD-GCq" secondAttribute="bottom" constant="8" symbolic="YES" id="b7b-nm-yIm"/>
+                            <constraint firstItem="OH7-OD-GCq" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" id="c9v-fW-biz"/>
+                            <constraint firstItem="5MX-xa-HW1" firstAttribute="leading" secondItem="ZMx-Gd-Iz8" secondAttribute="leading" id="e8i-zC-jND"/>
+                            <constraint firstItem="ZMx-Gd-Iz8" firstAttribute="top" secondItem="5MX-xa-HW1" secondAttribute="bottom" constant="8" symbolic="YES" id="i4i-ja-LjO"/>
+                            <constraint firstItem="OH7-OD-GCq" firstAttribute="trailing" secondItem="5MX-xa-HW1" secondAttribute="trailing" id="lqQ-J6-Gje"/>
+                            <constraint firstItem="OH7-OD-GCq" firstAttribute="leading" secondItem="5MX-xa-HW1" secondAttribute="leading" id="vQX-JY-KPa"/>
+                            <constraint firstItem="OH7-OD-GCq" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" id="z1i-r1-IzA"/>
+                        </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
+                    <connections>
+                        <outlet property="c0feButton" destination="5MX-xa-HW1" id="453-GF-CqU"/>
+                        <outlet property="c0ffButton" destination="ZMx-Gd-Iz8" id="dH3-Jq-73n"/>
+                        <outlet property="logView" destination="OH7-OD-GCq" id="DzR-tL-Crq"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
+            <point key="canvasLocation" x="131.8840579710145" y="138.61607142857142"/>
         </scene>
     </scenes>
 </document>
