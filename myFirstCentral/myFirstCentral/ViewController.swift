@@ -27,11 +27,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         log("new central state: \(stateToString(central.state))")
         
-        if (central.state == CBManagerState.poweredOn) {
-            log("starting scan...")
-            central.scanForPeripherals(withServices: [CBUUID(string: "CAFE")], options: nil)
-            log("scanning")
-        }
+        reevaluateScanning(central)
     }
     
     func centralManager(_ central: CBCentralManager,
@@ -42,17 +38,6 @@ class ViewController: UIViewController, CBCentralManagerDelegate {
         
         log("Connecting...")
         central.connect(peripheral, options: nil)
-    }
-    
-    func centralManager(_ central: CBCentralManager,
-                        didConnect peripheral: CBPeripheral) {
-        log("Connected to \(peripheral.identifier) (\(peripheral.name ?? "[no name]"))")
-
-        log("Stopping scan since we successfully connected to a peripheral.")
-        central.stopScan()
-        
-        c0feButton.isEnabled = true
-        c0ffButton.isEnabled = true
     }
     
     func centralManager(_ central: CBCentralManager,
@@ -67,6 +52,16 @@ class ViewController: UIViewController, CBCentralManagerDelegate {
     }
     
     func centralManager(_ central: CBCentralManager,
+                        didConnect peripheral: CBPeripheral) {
+        log("Connected to \(peripheral.identifier) (\(peripheral.name ?? "[no name]"))")
+        
+        c0feButton.isEnabled = true
+        c0ffButton.isEnabled = true
+        
+        reevaluateScanning(central)
+    }
+    
+    func centralManager(_ central: CBCentralManager,
                         didDisconnectPeripheral peripheral: CBPeripheral,
                         error: Error?) {
         if let er = error {
@@ -76,9 +71,33 @@ class ViewController: UIViewController, CBCentralManagerDelegate {
             log("Disconnected from \(peripheral.identifier) (\(peripheral.name ?? "[no name]")).")
         }
         
-        log("starting scan again")
-        central.scanForPeripherals(withServices: [CBUUID(string: "CAFE")], options: nil)
-        log("scanning")
+        reevaluateScanning(central)
+    }
+    
+    func reevaluateScanning(_ central: CBCentralManager) {
+        let services = [CBUUID(string: "CAFE")]
+        
+        if (central.state == CBManagerState.poweredOn) {
+            let count = central.retrieveConnectedPeripherals(withServices: services).count
+            if (count == 0) {
+                if (!central.isScanning) {
+                    log("connected to zero devices. starting scan.")
+                    central.scanForPeripherals(withServices: services, options: nil)
+                }
+            }
+            else {
+                if (central.isScanning) {
+                    log("connected to \(count) device(s). stopping scan.")
+                    central.stopScan()
+                }
+                else {
+                    log("connected to \(count) device(s). scanning already stopped.")
+                }
+            }
+        }
+        else {
+            log("skipping scanning state check - not powered on")
+        }
     }
     
     func log(_ msg: String) {
