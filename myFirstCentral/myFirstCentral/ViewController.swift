@@ -9,25 +9,34 @@
 import UIKit
 import CoreBluetooth
 
-class ViewController: UIViewController, CBCentralManagerDelegate {
+class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDelegate {
     
     @IBOutlet weak var logView: UITextView!
     @IBOutlet weak var c0feButton: UIButton!
     @IBOutlet weak var c0ffButton: UIButton!
     var central: CBCentralManager!
     var targetPeripheral: CBPeripheral? = nil
-    var connected = false
+    
+    // Connect only to a device that's extremely close.
+    let Min_RSSI_for_connecting = -35
+    
+    // let scanServices:[CBUUID]? = [CBUUID(string: "CAFE")]
+    let scanServices:[CBUUID]? = nil
+    
+    // To see several other GATT services, try out nil.
+    let discoverServices:[CBUUID]? = [CBUUID(string: "CAFE")]
+    // let discoverServices:[CBUUID]? = nil
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        log("initializing...")
+        log("Initializing...")
         central = CBCentralManager(delegate: self, queue: nil)
-        log("central state: \(stateToString(central.state))")
+        log("Central state: \(stateToString(central.state))")
     }
     
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        log("new central state: \(stateToString(central.state))")
+        log("New central state: \(stateToString(central.state))")
         
         reevaluateScanning(central)
     }
@@ -36,50 +45,60 @@ class ViewController: UIViewController, CBCentralManagerDelegate {
                         didDiscover peripheral: CBPeripheral,
                         advertisementData: [String : Any],
                         rssi RSSI: NSNumber) {
-        log("Discovered \(peripheral.identifier) (\(peripheral.name ?? "[no name]"))) (rssi: \(RSSI))")
+        log("Discovered \(peripheralDescription(peripheral)) (rssi: \(RSSI))")
 
         if let services = peripheral.services {
             for service in services {
-                log("  * Service: \(service.uuid)")
+                log("  * GATT service: \(service.uuid)")
             }
         }
         else {
-            log("  [No services advertised?]")
+            log("No GATT services identified")
         }
-        log("")
 
         if (targetPeripheral == nil) {
-            // Keep a reference to the peripheral we're connecting to.
-            // Otherwise we get API misuse warnings and the connection gets canceled.
-            targetPeripheral = peripheral
+            if (RSSI.intValue >= Min_RSSI_for_connecting) {
+                // Keep a reference to the peripheral we're connecting to.
+                // Otherwise we get API misuse warnings and the connection gets canceled.
+                targetPeripheral = peripheral
 
-            log("Connecting to \(peripheral.identifier) (\(peripheral.name ?? "[no name]")))")
-            central.connect(peripheral, options: nil)
-            log("")
+                log("Connecting...")
+                central.connect(peripheral, options: nil)
+
+                reevaluateScanning(central)
+            }
+            else {
+                log("Ignoring peripheral. Device is too far away, and RSSI value is too low: \(RSSI)")
+            }
         }
+        else {
+            log("Ignoring peripheral. Already in the process of connecting.")
+        }
+        log("")
     }
     
     func centralManager(_ central: CBCentralManager,
                         didFailToConnect peripheral: CBPeripheral,
                         error: Error?) {
         if let er = error {
-            log("Failed to connect to \(peripheral.identifier) (\(peripheral.name ?? "[no name]")): \(er)")
+            log("Failed to connect to \(peripheralDescription(peripheral)): \(er)")
         }
         else {
-            log("Failed to connect to \(peripheral.identifier) (\(peripheral.name ?? "[no name]")). Error unknown.")
+            log("Failed to connect to \(peripheralDescription(peripheral)). Error unknown.")
         }
 
-        if (peripheral == targetPeripheral) {
-            targetPeripheral = nil
-        }
-        else {
+        if (peripheral != targetPeripheral) {
             log("Error connecting to a different peripheral!")
+            return
         }
+        
+        targetPeripheral = nil
+        reevaluateScanning(central)
     }
     
     func centralManager(_ central: CBCentralManager,
                         didConnect peripheral: CBPeripheral) {
-        log("Connected to \(peripheral.identifier) (\(peripheral.name ?? "[no name]"))")
+        log("Connected to \(peripheralDescription(peripheral))")
         
         if (peripheral != targetPeripheral) {
             log("Connected to a different peripheral!")
@@ -88,74 +107,109 @@ class ViewController: UIViewController, CBCentralManagerDelegate {
         
         if let services = peripheral.services {
             for service in services {
-                log("  * Service: \(service.uuid)")
+                log("  * GATT service: \(service.uuid)")
             }
         }
         else {
-            log("  [Peripheral has no services?]")
+            log("No GATT services identified.")
         }
-        
-        connected = true
         
         c0feButton.isEnabled = true
         c0ffButton.isEnabled = true
-
-        reevaluateScanning(central)
+        
+        peripheral.delegate = self
+        peripheral.discoverServices(discoverServices)
     }
     
     func centralManager(_ central: CBCentralManager,
                         didDisconnectPeripheral peripheral: CBPeripheral,
                         error: Error?) {
         if let er = error {
-            log("Disconnected from \(peripheral.identifier) (\(peripheral.name ?? "[no name]")). Error: \(er)")
+            log("Disconnected from \(peripheralDescription(peripheral)). Error: \(er)")
         }
         else {
-            log("Disconnected from \(peripheral.identifier) (\(peripheral.name ?? "[no name]")).")
+            log("Disconnected from \(peripheralDescription(peripheral)).")
         }
         
-        if (peripheral == targetPeripheral) {
-            targetPeripheral = nil
-            connected = false
-            
-            c0feButton.isEnabled = false
-            c0ffButton.isEnabled = false
+        if (peripheral != targetPeripheral) {
+            log("Disconnected from a different peripheral!")
+            return
+        }
+        
+        targetPeripheral = nil
+        
+        c0feButton.isEnabled = false
+        c0ffButton.isEnabled = false
 
-            reevaluateScanning(central)
+        reevaluateScanning(central)
+    }
+    
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+        if let er = error {
+            log("Error discovering services: \(er)")
         }
         else {
-            log("Disconnected from a different peripheral!")
+            log("Discovered \(peripheral.services!.count) service(s)")
+            
+            for service in peripheral.services! {
+                log("  * Service: \(service.uuid)")
+                peripheral.discoverCharacteristics(nil, for: service)
+            }
+        }
+    }
+    
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+        if let er = error {
+            log("Error discovering characteristics: \(er)")
+        }
+        else {
+            log("Discovered \(service.characteristics!.count) characteristic(s)")
+            
+            for characteristic in service.characteristics! {
+                log("  * Characteristic: \(characteristic.uuid)")
+                peripheral.readValue(for: characteristic)
+            }
+        }
+    }
+    
+    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        if let er = error {
+            log("Error reading characteristic value: \(er)")
+        }
+        else {
+            log("Read characteristic value successfully.")
+            log("  * Characteristic: \(characteristic.uuid), Value: \(dataToString(characteristic.value))")
         }
     }
     
     func reevaluateScanning(_ central: CBCentralManager) {
-        // let scanServices = [CBUUID(string: "CAFE")]
-        let scanServices:[CBUUID]? = nil
-        
         if (central.state == CBManagerState.poweredOn) {
-            if (targetPeripheral == nil || !connected) {
+            if (targetPeripheral == nil) {
                 if (!central.isScanning) {
                     if (scanServices != nil) {
-                        log("Not connected yet. Starting scan for peripherals with CAFE service.");
+                        log("Not connecting yet. Starting scan for peripherals with CAFE service.");
                     }
                     else {
-                        log("Not connected yet. Starting scan for any peripherals.")
+                        log("Not connecting yet. Starting scan for any peripherals.")
                     }
                     central.scanForPeripherals(withServices: scanServices, options: nil)
                 }
             }
             else {
                 if (central.isScanning) {
-                    log("Connected to a peripheral. Stopping scan.")
+                    log("Stopping scan.")
                     central.stopScan()
+                    log("")
                 }
                 else {
-                    log("Connected to a peripheral. scanning already stopped.")
+                    log("Scan already stopped.")
                 }
             }
         }
         else {
             log("Skipping scanning state check - not powered on.")
         }
+        log("")
     }
     
     func log(_ msg: String) {
@@ -182,5 +236,21 @@ class ViewController: UIViewController, CBCentralManagerDelegate {
         @unknown default:
             return "unknown unknowns"
         }
+    }
+    
+    func dataToString(_ value: Data?) -> String {
+        if (value != nil) {
+            if let string = String(data: value!, encoding: .utf8) {
+                return "'\(string)'"
+            } else {
+                return "<<\(value!)>>"
+            }
+        } else {
+            return "[nil]"
+        }
+    }
+    
+    func peripheralDescription(_ peripheral: CBPeripheral) -> String {
+        return "\(peripheral.identifier) (\(peripheral.name ?? "[no name]"))"
     }
 }
