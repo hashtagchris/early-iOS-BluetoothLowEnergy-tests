@@ -1,6 +1,8 @@
 # early-iOS-BluetoothLowEnergy-tests
 iOS + Bluetooth Low Energy Tests, 2019
 
+[![Build Status](https://dev.azure.com/hashtagchris/public/_apis/build/status/hashtagchris.early-iOS-BluetoothLowEnergy-tests?branchName=master)](https://dev.azure.com/hashtagchris/public/_build/latest?definitionId=4&branchName=master)
+
 ## myFirstPeripheral
 
 myFirstPeripheral advertises one custom GATT service with two characteristics. One readable characteristic returns the utf8 bytes for "*** Hello, would you like some coffee?" for every read.
