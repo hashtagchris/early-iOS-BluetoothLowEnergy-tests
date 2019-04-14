@@ -66,6 +66,21 @@ class ViewController: UIViewController, CBCentralManagerDelegate {
         }
     }
     
+    func centralManager(_ central: CBCentralManager,
+                        didDisconnectPeripheral peripheral: CBPeripheral,
+                        error: Error?) {
+        if let er = error {
+            log("Disconnected from \(peripheral.identifier) (\(peripheral.name ?? "[no name]")). Error: \(er)")
+        }
+        else {
+            log("Disconnected from \(peripheral.identifier) (\(peripheral.name ?? "[no name]")).")
+        }
+        
+        log("starting scan again")
+        central.scanForPeripherals(withServices: [CBUUID(string: "CAFE")], options: nil)
+        log("scanning")
+    }
+    
     func log(_ msg: String) {
         print(msg)
         
