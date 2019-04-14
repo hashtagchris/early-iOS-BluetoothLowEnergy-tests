@@ -36,11 +36,11 @@ class ViewController: UIViewController, CBPeripheralManagerDelegate {
                     permissions: CBAttributePermissions.readable)
             ]
 
-            log("adding custom C0FE service")
+            log("adding custom CAFE service")
             peripheral.add(service)
             
             log("starting advertisement")
-            peripheral.startAdvertising(nil)
+            peripheral.startAdvertising([CBAdvertisementDataLocalNameKey: "myFirstPeripheral"])
             log("advertising")
         }
         else {
