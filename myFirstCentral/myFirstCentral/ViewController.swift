@@ -35,9 +35,19 @@ class ViewController: UIViewController, CBCentralManagerDelegate {
                         advertisementData: [String : Any],
                         rssi RSSI: NSNumber) {
         log("Discovered \(peripheral.identifier) (\(peripheral.name ?? "[no name]"))) (rssi: \(RSSI))")
+
+        if let services = peripheral.services {
+            for service in services {
+                log("  * Service: \(service.uuid)")
+            }
+        }
+        else {
+            log("  [No services advertised?]")
+        }
+        log("")
         
-        log("Connecting...")
-        central.connect(peripheral, options: nil)
+        //log("Connecting...")
+        //central.connect(peripheral, options: nil)
     }
     
     func centralManager(_ central: CBCentralManager,
@@ -77,12 +87,15 @@ class ViewController: UIViewController, CBCentralManagerDelegate {
     func reevaluateScanning(_ central: CBCentralManager) {
         let services = [CBUUID(string: "CAFE")]
         
+        // let scanServices:[CBUUID]? = services
+        let scanServices:[CBUUID]? = nil
+        
         if (central.state == CBManagerState.poweredOn) {
             let count = central.retrieveConnectedPeripherals(withServices: services).count
             if (count == 0) {
                 if (!central.isScanning) {
                     log("connected to zero devices. starting scan.")
-                    central.scanForPeripherals(withServices: services, options: nil)
+                    central.scanForPeripherals(withServices: scanServices, options: nil)
                 }
             }
             else {
