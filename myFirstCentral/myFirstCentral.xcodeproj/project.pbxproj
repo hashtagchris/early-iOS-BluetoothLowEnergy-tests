@@ -12,6 +12,7 @@
 		6D53D240226371CC00FEC664 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6D53D23E226371CC00FEC664 /* Main.storyboard */; };
 		6D53D242226371CF00FEC664 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6D53D241226371CF00FEC664 /* Assets.xcassets */; };
 		6D53D245226371CF00FEC664 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6D53D243226371CF00FEC664 /* LaunchScreen.storyboard */; };
+		6D53D24E2263724D00FEC664 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6D53D24D2263724D00FEC664 /* CoreBluetooth.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +23,7 @@
 		6D53D241226371CF00FEC664 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6D53D244226371CF00FEC664 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		6D53D246226371CF00FEC664 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		6D53D24D2263724D00FEC664 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -29,6 +31,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6D53D24E2263724D00FEC664 /* CoreBluetooth.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -40,6 +43,7 @@
 			children = (
 				6D53D239226371CC00FEC664 /* myFirstCentral */,
 				6D53D238226371CC00FEC664 /* Products */,
+				6D53D24C2263724D00FEC664 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -62,6 +66,14 @@
 				6D53D246226371CF00FEC664 /* Info.plist */,
 			);
 			path = myFirstCentral;
+			sourceTree = "<group>";
+		};
+		6D53D24C2263724D00FEC664 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				6D53D24D2263724D00FEC664 /* CoreBluetooth.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
