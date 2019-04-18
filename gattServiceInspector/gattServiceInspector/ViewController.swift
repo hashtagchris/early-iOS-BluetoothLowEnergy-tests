@@ -14,11 +14,10 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     @IBOutlet weak var scanButton: UIButton!
     @IBOutlet weak var logView: UITextView!
     @IBOutlet weak var discoveredTable: UITableView!
-    @IBOutlet weak var servicesTable: UITableView!
     
     var central: CBCentralManager!
     var discoveredPeripherals:[CBPeripheral] = []
-    var services:[CBService] = []
+    var selectedPeripheral:CBPeripheral? = nil
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -29,69 +28,36 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if (tableView == discoveredTable) {
-            return discoveredPeripherals.count
-        }
-        else {
-            return services.count
-        }
+        return discoveredPeripherals.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "discoverCell")
         
-        if (tableView == discoveredTable) {
-            let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "discoverCell")
-            
-            // TODO: Add latest RSSI value? Maybe on the right hand in the Accessory view section?
-            cell.textLabel?.text = discoveredPeripherals[indexPath.row].name
-            cell.detailTextLabel?.text =  discoveredPeripherals[indexPath.row].identifier.uuidString
-            
-            return cell
-        }
-        else {
-            let cell = UITableViewCell(style: .default, reuseIdentifier: "serviceCell")
-            
-            // TODO: Add latest RSSI value? Maybe on the right hand in the Accessory view section?
-            cell.textLabel?.text = services[indexPath.row].uuid.uuidString
-            
-            return cell
-        }
+        // TODO: Add latest RSSI value? Maybe on the right hand in the Accessory view section?
+        cell.textLabel?.text = discoveredPeripherals[indexPath.row].name
+        cell.detailTextLabel?.text =  discoveredPeripherals[indexPath.row].identifier.uuidString
+        
+        return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let peripheral = discoveredPeripherals[indexPath.row]
+        selectedPeripheral = discoveredPeripherals[indexPath.row]
         
-        // TODO: Disconnect from any other peripheral
-        central.connect(peripheral, options: nil)
-    }
-    
-    func centralManager(_ central: CBCentralManager,
-                        didConnect peripheral: CBPeripheral) {
-        log("Connected to \(peripheralDescription(peripheral))")
-        
-        services = []
-        
-        peripheral.delegate = self
-        peripheral.discoverServices(nil)
-    }
-    
-    func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
-        if let er = error {
-            log("Error discovering services: \(er)")
-        }
-        else {
-            log("Discovered \(peripheral.services!.count) service(s)")
-            
-            services = peripheral.services!
-            servicesTable.reloadData()
-            
-//            for service in peripheral.services! {
-//                log("  * Service: \(service.uuid)")
-//                peripheral.discoverCharacteristics(nil, for: service)
-//            }
-        }
-    }
+        central.stopScan()
 
+        performSegue(withIdentifier: "device", sender: self)
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        let deviceController = segue.destination as! DeviceViewController
+      
+        central.delegate = deviceController
+        deviceController.central = central
+        deviceController.peripheral = selectedPeripheral
+        deviceController.parentView = self
+    }
+    
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         log("New central state: \(stateToString(central.state))")
 
@@ -135,9 +101,5 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         @unknown default:
             return "unknown unknowns"
         }
-    }
-    
-    func peripheralDescription(_ peripheral: CBPeripheral) -> String {
-        return "\(peripheral.identifier) (\(peripheral.name ?? "[no name]"))"
-    }
+    }    
 }
