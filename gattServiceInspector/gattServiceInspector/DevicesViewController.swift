@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  DevicesViewController.swift
 //  gattServiceInspector
 //
 //  Created by Chris Sidi on 4/15/19.
@@ -9,10 +9,8 @@
 import UIKit
 import CoreBluetooth
 
-class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, CBCentralManagerDelegate, CBPeripheralDelegate {
-    
+class DevicesViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, CBCentralManagerDelegate, CBPeripheralDelegate {
     @IBOutlet weak var scanButton: UIButton!
-    @IBOutlet weak var logView: UITextView!
     @IBOutlet weak var discoveredTable: UITableView!
     
     var central: CBCentralManager!
@@ -21,12 +19,18 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        log("")
+        log("Devices: viewDidLoad")
         
         log("Initializing...")
         central = CBCentralManager(delegate: self, queue: nil)
         log("Central state: \(stateToString(central.state))")
     }
-
+    
+    override func viewDidAppear(_ animated: Bool) {
+        log("Devices: viewDidAppear")
+    }
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return discoveredPeripherals.count
     }
@@ -44,18 +48,19 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         selectedPeripheral = discoveredPeripherals[indexPath.row]
         
+        log("stopping scan")
         central.stopScan()
 
-        performSegue(withIdentifier: "device", sender: self)
+        performSegue(withIdentifier: "deviceInfo", sender: self)
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        let deviceController = segue.destination as! DeviceViewController
-      
-        central.delegate = deviceController
-        deviceController.central = central
-        deviceController.peripheral = selectedPeripheral
-        deviceController.parentView = self
+        log("Devices segueing to \(segue.destination)")
+        
+        let deviceInfoController = segue.destination as! DeviceInfoViewController
+        central.delegate = deviceInfoController
+        deviceInfoController.central = central
+        deviceInfoController.peripheral = selectedPeripheral
     }
     
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
@@ -79,9 +84,8 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     func log(_ msg: String) {
         print(msg)
-        
-        logView.text.append(msg)
-        logView.text.append("\n")
+//        logView.text.append(msg)
+//        logView.text.append("\n")
     }
     
     func stateToString(_ state: CBManagerState) -> String {
