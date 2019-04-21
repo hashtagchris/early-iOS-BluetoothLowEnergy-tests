@@ -28,7 +28,7 @@ class ServicesViewController : UIViewController, UITableViewDelegate, UITableVie
         log("Services: viewDidLoad")
 
         if (services == nil) {
-            log("Discovering services...")
+            log("Discovering services for \(peripheralDescription(selectedPeripheral))...")
             selectedPeripheral.discoverServices(nil)
         }
     }
@@ -74,10 +74,18 @@ class ServicesViewController : UIViewController, UITableViewDelegate, UITableVie
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if tableView == servicesTable {
             selectedService = services![indexPath.row]
+            characteristics = nil
+            selectedCharacteristic = nil
+            valueTextView.text = ""
+            
+            log("Discovering characteristics for \(selectedService!)...")
             selectedPeripheral.discoverCharacteristics(nil, for: selectedService!)
         }
         else {
             selectedCharacteristic = characteristics![indexPath.row]
+            valueTextView.text = ""
+
+            log("Reading value for \(selectedCharacteristic!)...")
             selectedPeripheral.readValue(for: selectedCharacteristic!)
         }
     }
@@ -96,41 +104,39 @@ class ServicesViewController : UIViewController, UITableViewDelegate, UITableVie
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         if peripheral != selectedPeripheral {
-            log("Ignoring services for other peripheral, \(peripheralDescription(peripheral))")
+            log("Ignoring services for other peripheral, \(peripheralDescription(peripheral)).")
             return
         }
         
         if let er = error {
-            log("Error discovering services: \(er)")
+            log("Error discovering services: \(er).")
+            return
         }
-        else {
-            log("Discovered \(peripheral.services!.count) service(s)")
-            
-            services = peripheral.services
-            servicesTable.reloadData()
-        }
+        
+        log("Discovered \(peripheral.services!.count) service(s).")
+        services = peripheral.services
+        servicesTable.reloadData()
     }
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         if peripheral != selectedPeripheral {
-            log("Ignoring characteristics for other peripheral, \(peripheralDescription(peripheral))")
+            log("Ignoring characteristics for other peripheral, \(peripheralDescription(peripheral)).")
             return
         }
 
         if service != selectedService {
-            log("Ignoring characteristics for other service, \(service)")
+            log("Ignoring characteristics for other service, \(service).")
             return
         }
         
         if let er = error {
-            log("Error discovering characteristics: \(er)")
+            log("Error discovering characteristics: \(er).")
+            return
         }
-        else {
-            log("Discovered \(service.characteristics!.count) characteristic(s)")
-            
-            characteristics = service.characteristics
-            characteristicsTable.reloadData()
-        }
+
+        log("Discovered \(service.characteristics!.count) characteristic(s).")
+        characteristics = service.characteristics
+        characteristicsTable.reloadData()
     }
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
@@ -149,7 +155,14 @@ class ServicesViewController : UIViewController, UITableViewDelegate, UITableVie
             return
         }
         
-        valueTextView.text = dataToString(characteristic.value)
+        if let er = error {
+            valueTextView.text = "Error reading value: \(er)"
+            return
+        }
+        
+        let value = dataToString(characteristic.value, quoteString: true)
+        log("Received value for \(characteristic): \(value)")
+        valueTextView.text = value
     }
     
     func log(_ msg: String) {
@@ -160,14 +173,24 @@ class ServicesViewController : UIViewController, UITableViewDelegate, UITableVie
         return "\(peripheral.identifier) (\(peripheral.name ?? "[no name]"))"
     }
     
-    func dataToString(_ value: Data?) -> String {
-        if (value != nil) {
-            if let string = String(data: value!, encoding: .utf8) {
-                return string
-            } else {
-                return "<<\(value!)>>"
+    func dataToString(_ value: Data?, quoteString: Bool) -> String {
+        if let val = value {
+            log("Data value is \(val.count) byte(s).")
+            if val.count == 0 {
+                return "[empty]"
             }
-        } else {
+            
+            let string = String(data: value!, encoding: .utf8)
+            
+            if string != nil && string != "" {
+                log("String length: \(string!.count)")
+                return quoteString ? "\"\(string!)\"" : string!
+            }
+            
+            // TODO: Format the bytes as a hexadecimal string.
+            return "<<\(val)>>"
+        }
+        else {
             return "[nil]"
         }
     }
