@@ -60,13 +60,20 @@ class ServicesViewController : UIViewController, UITableViewDelegate, UITableVie
         let array:[CBAttribute]? = tableView == servicesTable
             ? services
             : characteristics
-
+    
         let cellIdentifier = tableView == servicesTable
             ? "serviceCell"
             : "characteristicCell"
-    
-        let cell = UITableViewCell(style: .default, reuseIdentifier: cellIdentifier)
-        cell.textLabel?.text = array![indexPath.row].uuid.uuidString
+
+        let cell = UITableViewCell(style: .subtitle, reuseIdentifier: cellIdentifier)
+
+        let attribute = array![indexPath.row]
+
+        let uuidDesc = "\(attribute.uuid)"
+        cell.textLabel?.text = uuidDesc
+        if uuidDesc != attribute.uuid.uuidString {
+            cell.detailTextLabel?.text =  attribute.uuid.uuidString
+        }
         
         return cell
     }
