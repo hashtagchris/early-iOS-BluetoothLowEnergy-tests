@@ -12,11 +12,15 @@ import CoreBluetooth
 class ServicesViewController : UIViewController, UITableViewDelegate, UITableViewDataSource, CBCentralManagerDelegate, CBPeripheralDelegate {
     @IBOutlet weak var servicesTable: UITableView!
     @IBOutlet weak var characteristicsTable: UITableView!
-
+    @IBOutlet weak var valueTextView: UITextView!
+    
     var parentView: UIViewController!
     var central: CBCentralManager!
-    var peripheral: CBPeripheral!
+    var selectedPeripheral: CBPeripheral!
     var services:[CBService]? = nil
+    var characteristics:[CBCharacteristic]? = nil
+    var selectedService:CBService? = nil
+    var selectedCharacteristic:CBCharacteristic? = nil
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -25,7 +29,7 @@ class ServicesViewController : UIViewController, UITableViewDelegate, UITableVie
 
         if (services == nil) {
             log("Discovering services...")
-            peripheral.discoverServices(nil)
+            selectedPeripheral.discoverServices(nil)
         }
     }
     
@@ -38,21 +42,44 @@ class ServicesViewController : UIViewController, UITableViewDelegate, UITableVie
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if let srv = services {
-            return srv.count
-        }
-        else {
-            return 0
-        }
+        let array:[CBAttribute]? = tableView == servicesTable
+            ? services
+            : characteristics
+        
+//        if tableView == servicesTable {
+//            array = services
+//        }
+//        else {
+//            array = characteristics
+//        }
+        
+        return array?.count ?? 0
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = UITableViewCell(style: .default, reuseIdentifier: "serviceCell")
-        
-        // TODO: Add latest RSSI value? Maybe on the right hand in the Accessory view section?
-        cell.textLabel?.text = services![indexPath.row].uuid.uuidString
+        let array:[CBAttribute]? = tableView == servicesTable
+            ? services
+            : characteristics
+
+        let cellIdentifier = tableView == servicesTable
+            ? "serviceCell"
+            : "characteristicCell"
+    
+        let cell = UITableViewCell(style: .default, reuseIdentifier: cellIdentifier)
+        cell.textLabel?.text = array![indexPath.row].uuid.uuidString
         
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if tableView == servicesTable {
+            selectedService = services![indexPath.row]
+            selectedPeripheral.discoverCharacteristics(nil, for: selectedService!)
+        }
+        else {
+            selectedCharacteristic = characteristics![indexPath.row]
+            selectedPeripheral.readValue(for: selectedCharacteristic!)
+        }
     }
     
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
@@ -68,15 +95,61 @@ class ServicesViewController : UIViewController, UITableViewDelegate, UITableVie
 //    }
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+        if peripheral != selectedPeripheral {
+            log("Ignoring services for other peripheral, \(peripheralDescription(peripheral))")
+            return
+        }
+        
         if let er = error {
             log("Error discovering services: \(er)")
         }
         else {
             log("Discovered \(peripheral.services!.count) service(s)")
             
-            services = peripheral.services!
+            services = peripheral.services
             servicesTable.reloadData()
         }
+    }
+    
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+        if peripheral != selectedPeripheral {
+            log("Ignoring characteristics for other peripheral, \(peripheralDescription(peripheral))")
+            return
+        }
+
+        if service != selectedService {
+            log("Ignoring characteristics for other service, \(service)")
+            return
+        }
+        
+        if let er = error {
+            log("Error discovering characteristics: \(er)")
+        }
+        else {
+            log("Discovered \(service.characteristics!.count) characteristic(s)")
+            
+            characteristics = service.characteristics
+            characteristicsTable.reloadData()
+        }
+    }
+    
+    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        if peripheral != selectedPeripheral {
+            log("Ignoring value for other peripheral, \(peripheralDescription(peripheral))")
+            return
+        }
+        
+        if characteristic.service != selectedService {
+            log("Ignoring value for other service, \(characteristic.service)")
+            return
+        }
+
+        if characteristic != selectedCharacteristic {
+            log("Ignoring value for other characteristic, \(characteristic)")
+            return
+        }
+        
+        valueTextView.text = dataToString(characteristic.value)
     }
     
     func log(_ msg: String) {
@@ -85,5 +158,17 @@ class ServicesViewController : UIViewController, UITableViewDelegate, UITableVie
     
     func peripheralDescription(_ peripheral: CBPeripheral) -> String {
         return "\(peripheral.identifier) (\(peripheral.name ?? "[no name]"))"
+    }
+    
+    func dataToString(_ value: Data?) -> String {
+        if (value != nil) {
+            if let string = String(data: value!, encoding: .utf8) {
+                return string
+            } else {
+                return "<<\(value!)>>"
+            }
+        } else {
+            return "[nil]"
+        }
     }
 }

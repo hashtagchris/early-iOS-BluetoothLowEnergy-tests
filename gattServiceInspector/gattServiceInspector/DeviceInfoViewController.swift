@@ -51,7 +51,7 @@ class DeviceInfoViewController: UIViewController, CBCentralManagerDelegate, CBPe
         peripheral.delegate = servicesController
         
         servicesController.central = central
-        servicesController.peripheral = peripheral
+        servicesController.selectedPeripheral = peripheral
         servicesController.services = services
     }
     
