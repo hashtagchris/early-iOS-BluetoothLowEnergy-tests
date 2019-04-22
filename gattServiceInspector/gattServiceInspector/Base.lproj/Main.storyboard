@@ -37,6 +37,9 @@
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="e2V-nG-6ot">
                                 <rect key="frame" x="20" y="88" width="374" height="30"/>
                                 <state key="normal" title="Scan"/>
+                                <connections>
+                                    <action selector="onScanButtonPressed:" destination="BYZ-38-t0r" eventType="touchUpInside" id="xPr-xi-iwx"/>
+                                </connections>
                             </button>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="sEv-AU-usr">
                                 <rect key="frame" x="20" y="155" width="374" height="707"/>

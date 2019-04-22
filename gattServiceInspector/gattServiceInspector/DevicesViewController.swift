@@ -16,6 +16,7 @@ class DevicesViewController: UIViewController, UITableViewDelegate, UITableViewD
     var central: CBCentralManager!
     var discoveredPeripherals:[CBPeripheral] = []
     var selectedPeripheral:CBPeripheral? = nil
+    var initialized = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -25,10 +26,21 @@ class DevicesViewController: UIViewController, UITableViewDelegate, UITableViewD
         log("Initializing...")
         central = CBCentralManager(delegate: self, queue: nil)
         log("Central state: \(stateToString(central.state))")
+        checkIfPowerOn()
     }
     
     override func viewDidAppear(_ animated: Bool) {
         log("Devices: viewDidAppear")
+        checkIfPowerOn()
+    }
+    
+    @IBAction func onScanButtonPressed(_ sender: Any) {
+        if (central.isScanning) {
+            stopScanning()
+        }
+        else {
+            startScanning()
+        }
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -47,9 +59,7 @@ class DevicesViewController: UIViewController, UITableViewDelegate, UITableViewD
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         selectedPeripheral = discoveredPeripherals[indexPath.row]
-        
-        log("stopping scan")
-        central.stopScan()
+        stopScanning()
 
         performSegue(withIdentifier: "deviceInfo", sender: self)
     }
@@ -65,10 +75,7 @@ class DevicesViewController: UIViewController, UITableViewDelegate, UITableViewD
     
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         log("New central state: \(stateToString(central.state))")
-
-        if (central.state == .poweredOn) {
-            central.scanForPeripherals(withServices: nil, options: nil)
-        }
+        checkIfPowerOn()
     }
     
     func centralManager(_ central: CBCentralManager,
@@ -77,8 +84,34 @@ class DevicesViewController: UIViewController, UITableViewDelegate, UITableViewD
                         rssi RSSI: NSNumber) {
         
         if (!discoveredPeripherals.contains(peripheral)) {
+            log("Discovered \(peripheralDescription(peripheral))")
             discoveredPeripherals.append(peripheral)
             discoveredTable.reloadData()
+        }
+    }
+    
+    func checkIfPowerOn() {
+        if (!initialized && central.state == .poweredOn) {
+            startScanning()
+            initialized = true
+        }
+        
+        scanButton.isEnabled = central.state == .poweredOn
+    }
+    
+    func startScanning() {
+        if (!central.isScanning) {
+            log("Starting scan.")
+            central.scanForPeripherals(withServices: nil, options: nil)
+            scanButton.setTitle("Stop Scan", for: .normal)
+        }
+    }
+    
+    func stopScanning() {
+        if (central.isScanning) {
+            log("Stopping scan.")
+            central.stopScan()
+            scanButton.setTitle("Resume Scan", for: .normal)
         }
     }
     
@@ -86,6 +119,10 @@ class DevicesViewController: UIViewController, UITableViewDelegate, UITableViewD
         print(msg)
 //        logView.text.append(msg)
 //        logView.text.append("\n")
+    }
+    
+    func peripheralDescription(_ peripheral: CBPeripheral) -> String {
+        return "\(peripheral.identifier) (\(peripheral.name ?? "[no name]"))"
     }
     
     func stateToString(_ state: CBManagerState) -> String {
