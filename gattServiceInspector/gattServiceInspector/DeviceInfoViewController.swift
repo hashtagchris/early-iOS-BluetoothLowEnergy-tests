@@ -10,6 +10,7 @@ import UIKit
 import CoreBluetooth
 
 class DeviceInfoViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDelegate {
+    @IBOutlet weak var deviceNameLabel: UILabel!
     @IBOutlet weak var statusLabel: UILabel!
     @IBOutlet weak var inspectButton: UIButton!
     @IBOutlet weak var manufacturerName: UITextField!
@@ -21,7 +22,7 @@ class DeviceInfoViewController: UIViewController, CBCentralManagerDelegate, CBPe
     @IBOutlet weak var systemId: UITextField!
     
     var central: CBCentralManager!
-    var peripheral: CBPeripheral!
+    var selectedPeripheral: CBPeripheral!
     var services:[CBService]? = nil
     var DeviceInfoUUID = CBUUID(string: "180A")
     var discoveredAllServices = false
@@ -31,12 +32,12 @@ class DeviceInfoViewController: UIViewController, CBCentralManagerDelegate, CBPe
         log("")
         log("DeviceInfo: viewDidLoad")
         
-        inspectButton.isEnabled = false
+        deviceNameLabel.text = selectedPeripheral.name ?? selectedPeripheral.identifier.uuidString
         
         log("connecting...")
         statusLabel.text = "Connecting..."
-        // TODO: Disconnect from any other peripheral
-        central.connect(peripheral, options: nil)
+        inspectButton.isEnabled = false
+        central.connect(selectedPeripheral, options: nil)
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -48,10 +49,10 @@ class DeviceInfoViewController: UIViewController, CBCentralManagerDelegate, CBPe
         
         let servicesController = segue.destination as! ServicesViewController
         central.delegate = servicesController
-        peripheral.delegate = servicesController
+        selectedPeripheral.delegate = servicesController
         
         servicesController.central = central
-        servicesController.selectedPeripheral = peripheral
+        servicesController.selectedPeripheral = selectedPeripheral
         servicesController.services = services
     }
     
@@ -59,28 +60,42 @@ class DeviceInfoViewController: UIViewController, CBCentralManagerDelegate, CBPe
     }
 
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
-        log("failed to connect")
+        if peripheral != selectedPeripheral {
+            log("Ignoring failure to connect to another peripheral, \(peripheralDescription(peripheral)).")
+            return
+        }
 
         if let er = error {
+            log("Failed to connect: \(er)")
             statusLabel.text = "Failed to connect: \(er)"
         }
         else {
+            log("Failed to connect.")
             statusLabel.text = "Failed to connect"
         }
     }
     
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        if peripheral != selectedPeripheral {
+            log("Ignoring services for other peripheral, \(peripheralDescription(peripheral)).")
+            return
+        }
+
         log("connected")
         statusLabel.text = "Connected"
         inspectButton.isEnabled = true
         
+        discoveredAllServices = false
         peripheral.delegate = self
-        
-        // Look for DeviceInfo
         peripheral.discoverServices([DeviceInfoUUID])
     }
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+        if peripheral != selectedPeripheral {
+            log("Ignoring services for other peripheral, \(peripheralDescription(peripheral)).")
+            return
+        }
+
         if let er = error {
             log("Error discovering services: \(er)")
         }
@@ -104,6 +119,11 @@ class DeviceInfoViewController: UIViewController, CBCentralManagerDelegate, CBPe
     }
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+        if peripheral != selectedPeripheral {
+            log("Ignoring characteristics for other peripheral, \(peripheralDescription(peripheral)).")
+            return
+        }
+
         if let er = error {
             log("Error discovering characteristics: \(er)")
         }
@@ -121,6 +141,11 @@ class DeviceInfoViewController: UIViewController, CBCentralManagerDelegate, CBPe
     }
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        if peripheral != selectedPeripheral {
+            log("Ignoring updated values for other peripheral, \(peripheralDescription(peripheral)).")
+            return
+        }
+
         if let er = error {
             log("Error reading value: \(er)")
         }
@@ -160,6 +185,10 @@ class DeviceInfoViewController: UIViewController, CBCentralManagerDelegate, CBPe
     
     func log(_ msg: String) {
         print(msg)
+    }
+    
+    func peripheralDescription(_ peripheral: CBPeripheral) -> String {
+        return "\(peripheral.identifier) (\(peripheral.name ?? "[no name]"))"
     }
     
     func dataToString(_ value: Data?) -> String {

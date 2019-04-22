@@ -60,7 +60,7 @@ class DevicesViewController: UIViewController, UITableViewDelegate, UITableViewD
         let deviceInfoController = segue.destination as! DeviceInfoViewController
         central.delegate = deviceInfoController
         deviceInfoController.central = central
-        deviceInfoController.peripheral = selectedPeripheral
+        deviceInfoController.selectedPeripheral = selectedPeripheral
     }
     
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
