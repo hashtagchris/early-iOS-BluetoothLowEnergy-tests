@@ -17,6 +17,9 @@ class DevicesViewController: UIViewController, UITableViewDelegate, UITableViewD
     var discoveredPeripherals:[CBPeripheral] = []
     var selectedPeripheral:CBPeripheral? = nil
     var initialized = false
+
+    // Offer a GATT Service of our own, without advertising it to unconnected devices.
+    var gattServer = GattServer()
     
     override func viewDidLoad() {
         super.viewDidLoad()
