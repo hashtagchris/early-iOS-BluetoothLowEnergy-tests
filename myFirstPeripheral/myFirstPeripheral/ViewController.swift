@@ -14,7 +14,7 @@ class ViewController: UIViewController, CBPeripheralManagerDelegate {
     var peripheral: CBPeripheralManager!
     var requestCount: Int = 0
 
-    var gattClient: GattClient? = nil
+    var gattClient: GattClient = GattClient()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -83,9 +83,6 @@ class ViewController: UIViewController, CBPeripheralManagerDelegate {
         request.value = value.data(using: String.Encoding.utf8)
 
         peripheral.respond(to: request, withResult: CBATTError.success)
-
-        // We know a central is connected to us - can we call the GATT services running on that central?
-        gattClient = GattClient(uuid: request.central.identifier)
     }
 
     func log(_ msg: String) {

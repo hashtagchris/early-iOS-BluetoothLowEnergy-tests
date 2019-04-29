@@ -12,35 +12,40 @@ import CoreBluetooth
 // A GATT client for an iOS App that operates as a BLE Peripheral. CoreBluetooth requires using a CBCentralManager
 // to use remote GATT services, but we don't have to actually scan for the remote device.
 class GattClient: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
-    var remoteUUID: UUID!
+    // Replace with your service UUIDs
+    let remoteServiceUUIDs = [CBUUID(string: "FACE")]
     var remoteDevice: CBPeripheral? = nil
     var centralManager: CBCentralManager!
     let loggingEnabled = true
+    var timer: Timer? = nil
 
     override init() {
         super.init()
         centralManager = CBCentralManager(delegate: self, queue: nil)
     }
 
-    convenience init(uuid: UUID) {
-        self.init()
-        remoteUUID = uuid
-    }
-
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         log("new centralManager state: \(stateToString(central.state))")
 
         if (central.state == .poweredOn) {
-            // Don't scan, just connect to the device already connected to us.
-            log("Attempting to find remote device \(remoteUUID!)...")
-            let connectedPeripherals = centralManager.retrievePeripherals(withIdentifiers: [remoteUUID])
-            log("Devices found: \(connectedPeripherals.count)")
+            // There's no `didConnect` event we can listen for, so poll for connected devices.
+            timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true, block: findConnectedDevice)
+        }
+    }
 
-            if (connectedPeripherals.count == 1) {
-                remoteDevice = connectedPeripherals[0]
-                log("Connecting...")
-                centralManager.connect(remoteDevice!, options: nil)
-            }
+    func findConnectedDevice(timer: Timer) {
+        // Don't scan, just connect to the device already connected to us offering the right services.
+        log("Searching for connected devices...")
+        // let connectedPeripherals = centralManager.retrievePeripherals(withIdentifiers: [remoteUUID])
+        let connectedPeripherals = centralManager.retrieveConnectedPeripherals(withServices: remoteServiceUUIDs)
+        log("Devices found: \(connectedPeripherals.count)")
+
+        if (connectedPeripherals.count == 1) {
+            remoteDevice = connectedPeripherals[0]
+            log("Connecting...")
+            centralManager.connect(remoteDevice!, options: nil)
+
+            timer.invalidate()
         }
     }
 
@@ -54,9 +59,11 @@ class GattClient: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        log("Services so far: \(String(describing: peripheral.services))")
+
         log("Searching for FACE service...")
         peripheral.delegate = self
-        peripheral.discoverServices([CBUUID(string: "FACE")])
+        peripheral.discoverServices(remoteServiceUUIDs)
     }
 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
