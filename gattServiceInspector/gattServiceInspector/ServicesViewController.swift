@@ -90,10 +90,32 @@ class ServicesViewController : UIViewController, UITableViewDelegate, UITableVie
         }
         else {
             selectedCharacteristic = characteristics![indexPath.row]
-            valueTextView.text = ""
 
-            log("Reading value for \(selectedCharacteristic!)...")
-            selectedPeripheral.readValue(for: selectedCharacteristic!)
+            var text:String? = nil
+            if (selectedCharacteristic!.properties.contains(.read)) {
+                text = ""
+                log("Reading value for \(selectedCharacteristic!)...")
+                selectedPeripheral.readValue(for: selectedCharacteristic!)
+            }
+
+            if (selectedCharacteristic!.properties.contains(.notify)) {
+                if (selectedCharacteristic!.isNotifying) {
+                    text = "Unsubscribing"
+                    log("Unsubscribing from \(selectedCharacteristic!)...")
+                    selectedPeripheral.setNotifyValue(false, for: selectedCharacteristic!)
+                }
+                else {
+                    text = "Subscribing"
+                    log("Subscribing to \(selectedCharacteristic!)...")
+                    selectedPeripheral.setNotifyValue(true, for: selectedCharacteristic!)
+                }
+            }
+
+            if (text == nil) {
+                text = "Characteristic is not readable nor notifiable."
+            }
+
+            valueTextView.text = text
         }
     }
     
@@ -151,7 +173,10 @@ class ServicesViewController : UIViewController, UITableViewDelegate, UITableVie
             log("Ignoring value for other peripheral, \(peripheralDescription(peripheral))")
             return
         }
-        
+
+        let value = dataToString(characteristic.value, quoteString: true)
+        log("Received value for \(characteristic): \(value)")
+
         if characteristic.service != selectedService {
             log("Ignoring value for other service, \(characteristic.service)")
             return
@@ -167,11 +192,23 @@ class ServicesViewController : UIViewController, UITableViewDelegate, UITableVie
             return
         }
         
-        let value = dataToString(characteristic.value, quoteString: true)
-        log("Received value for \(characteristic): \(value)")
         valueTextView.text = value
     }
-    
+
+    func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
+        if peripheral != selectedPeripheral {
+            log("Ignoring value for other peripheral, \(peripheralDescription(peripheral))")
+            return
+        }
+
+        if let er = error {
+            log("Error (un)subscribing to characteristic: \(er)")
+            return
+        }
+
+        log("characteristic: \(characteristic.uuid), isNotifying: \(characteristic.isNotifying)")
+    }
+
     func log(_ msg: String) {
         print(msg)
     }
